@@ -3,7 +3,7 @@
 ## Script to help checkout jbosstools repositories.
 ##
 ## How to get/use:
-## wget curl -O https://raw.github.com/jbosstools/jbosstools-build/master/scripts/checkout.sh
+## curl -O https://raw.github.com/jbosstools/jbosstools-build/master/scripts/checkout.sh
 ## chmod +x checkout.sh
 ## ./checkout.sh -d jbosstools jbosstools-openshift
 
