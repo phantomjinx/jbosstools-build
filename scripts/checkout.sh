@@ -1,25 +1,45 @@
 #!/bin/bash
 
-if [[ $# -lt 1 ]]; then
-	echo "Usage: $0 <moduleName1> <moduleName2> <...> [-b branch (assumes master if omitted)] [-u username-for-github-fork] [-n|--no-upstream]"
-	echo "Example: $0 openshift"
-	echo "Example: $0 openshift webservices -b jbosstools-4.0.x"
-	echo "Example: $0 base server gwt -u nickboldt -n"
-	exit 1;
-fi
+## Script to help checkout jbosstools repositories.
+##
+## How to get/use:
+## wget curl -O https://raw.github.com/jbosstools/jbosstools-build/master/scripts/checkout.sh
+## chmod +x checkout.sh
+## ./checkout.sh -d jbosstools jbosstools-openshift
+
+usage()
+{
+    app=`basename $0`
+    cat <<EOF
+    usage: $app options <module> <module2> ..
+    
+    This script will check out repositories from JBoss Tools github reposiotry (http://github.com/jbosstools).
+  
+    OPTIONS:.
+        -p   use private remote (SSH mode) (default is read-only)
+        -d   destination directory, otherwise pwd is used.
+        -u   username for remote fork to add (will not fork, but just assume the github user has one)
+	-n   no upstream checkout. Default pom.xml will be parsed to checkout additional modules based on "bootstrap" profile in pom.xml
+
+	Examples: 
+          $app openshift
+	  $app jbosstools-openshift webservices
+	  $app base server gwt -u nickboldt -n
+EOF
+}
 
 dbg=":" # debug off
 #dbg="echo -e" # debug on
 debug ()
 {
-	$dbg "${grey}${1}${norm}"
+	$dbg "${grey}$1${norm}"
 }
 
 basedir=`pwd`
 username=""
 moduleNames=""
-branch="master"
 noUpstreamClone=0
+privaterepo=0
 
 # colours!
 norm="\033[0;39m";
@@ -35,8 +55,9 @@ red="\033[1;31m";
 while [[ "$#" -gt 0 ]]; do
 	case $1 in
 		'-n'|'--no-upstream') noUpstreamClone=1;;
-		'-b') branch="$2"; shift 1;;
-		'-u') username="$2"; shift 1;;
+	        '-u') username="$2"; shift 1;;
+                '-d') basedir="$2"; shift 1;;
+                '-p') privaterepo=1;; 
 		*) moduleNames="$moduleNames $1";;
 	esac
 	shift 1
@@ -45,79 +66,46 @@ done
 showStatus()
 {
 	module=$1
-	pushd ${basedir}/${module} >/dev/null
-	echo '=============================================================';
-	echo "git status:"
-	git status
-	echo '-------------------------------------------------------------';
-	echo "git remote -v"
-	git remote -v
-	echo '-------------------------------------------------------------';
-	echo "git branch -v"
-	git branch -v
-	echo '-------------------------------------------------------------';
-	echo "For recent commits, use git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative -10"
-	echo '=============================================================';
-	popd >/dev/null
+	if [ -d "${basedir}/${module}" ]; then
+	    cd ${basedir}/${module}
+	    echo '=============================================================';
+	    echo "git status:"
+	    git status
+	    echo '-------------------------------------------------------------';
+	    echo "git remote -v"
+	    git remote -v
+	    echo '-------------------------------------------------------------';
+	    echo "git branch -v"
+	    git branch -v
+	    echo '=============================================================';
+	    cd -
+       else 
+	    echo ${basedir}/${module} not found
+       fi
 }
 
-switchToFork ()
+function realname() 
 {
-	module="$1"
-	branch="$2"
-	username="$3"
-	pushd ${basedir}/${module} >/dev/null
-	git remote rm origin
-	if [[ $username ]]; then
-		# read-write
-		git remote add origin git@github.com:${username}/jbosstools-${module}.git
-	fi
-	git remote rm upstream
-	# read-only
-	git remote add upstream git://github.com/jbosstools/jbosstools-${module}.git
-
-	git checkout -b upstream/${branch}
-	git checkout upstream/${branch}
-	git pull upstream upstream/${branch}
-
-	git checkout -b ${branch}
-	git checkout ${branch}
-	git pull origin ${branch}
-	popd >/dev/null
+## TODO replace with a 404 check for the github repo
+    reporesult=`curl --output /dev/null --silent --head -L --write-out '%{http_code}\n' https://github.com/jbosstools/$1`  
+    if [ "$reporesult" == "404" ]; then
+        echo jbosstools-$1
+    else
+        echo $1
+    fi
 }
+
 
 readOp ()
 {
-	echo -e "There is already a folder in this directory called ${blue}${module}${norm}. Would you like to ${red}DELETE${norm} (d), ${yellow}UPDATE${norm} (u), ${green}FORK${norm} (f), or hit enter to ${grey}SKIP${norm}?"
+	echo -e "There is already a folder in this directory called ${blue}${module}${norm}. Would you like to ${red}DELETE${norm} (d) and do a new clone or hit enter to ${grey}SKIP${norm}?"
 	read op
 	case $op in
-		'f'|'F'|'fork'|'FORK') 		
-			if [[ ! $username ]]; then
-				echo "Error: no username specified with '-u USERNAME' on commandline. Must exit!"
-				exit 1
-			else
-				switchToFork ${module} ${branch} ${username}
-				showStatus ${module}
-			fi
-			;;
 		'd'|'D'|'delete'|'DELETE')
-			rm -fr ./${module}
+			rm -fr ${basedir}/${module}
 			gitClone ${module}
 			;;
-		'u'|'U'|'update'|'UPDATE')	
-			pushd ${basedir}/${module} >/dev/null
-			git checkout -b upstream/${branch}
-			git checkout upstream/${branch}
-			git pull upstream ${branch}
-			if [[ $username ]]; then
-				git checkout -b ${branch}
-				git checkout ${branch}
-				git pull origin ${branch}
-			fi
-			showStatus ${module}
-			popd >/dev/null
-			;;
-		*) 
+	        *) 
 			debug "Module ${module} skipped."
 			;;
 	esac
@@ -128,18 +116,26 @@ doneModules=""
 gitClone ()
 {
 	module=$1
-	doneModules="${doneModules} ${module}"
-	if [[ -d ./${module} ]]; then
+        doneModules="${doneModules} ${module}"
+
+	if [[ -d ${basedir}/${module} ]]; then
 		readOp;
 	else
-		if [[ $username ]]; then
-			# read-write
-			git clone git@github.com:${username}/jbosstools-${module}.git ${module}
+                if [[ ${privaterepo} == "1" ]]; then
+		    protocol=git@github.com:
 		else
-			# read-only
-			git clone git://github.com/jbosstools/jbosstools-${module}.git ${module}
+		    protocol=git://github.com/
 		fi
-		switchToFork ${module} ${branch} ${username}
+
+                # main repo
+		git clone ${protocol}jbosstools/${module}.git ${basedir}/${module}
+
+		if [[ $username ]]; then
+		    debug Adding remote to fork for $username
+		    cd ${basedir}/${module}
+		    git remote add $username git@github.com:${username}/${module}.git
+		fi
+
 		showStatus ${module}
 	fi
 }
@@ -147,10 +143,10 @@ gitClone ()
 # parse 
 gitCloneUpstream ()
 {
-	if [[ -f ${moduleName}/pom.xml ]]; then
+	if [[ -f ${basedir}/${moduleName}/pom.xml ]]; then
 		debug "Read ${moduleName}/pom.xml ..."
 		SEQ=/usr/bin/seq
-		a=( $( cat ${moduleName}/pom.xml ) )
+		a=( $( cat ${basedir}/${moduleName}/pom.xml ) )
 		nextModules=""
 		for i in $($SEQ 0 $((${#a[@]} - 1))); do
 			line="${a[$i]}"
@@ -160,7 +156,8 @@ gitCloneUpstream ()
 				while [[ ${nextLine//\/modules} == ${nextLine} ]]; do # collect upstream repos
 					nextModule=$nextLine
 					if [[ ${nextModule//module>} != ${nextModule} ]]; then # want this one
-						nextModule=$(echo ${nextModule} | sed -e "s#<module>../\(.\+\)</module>#\1#")
+						nextModule=$(echo ${nextModule} | sed -e "s/<module>..\/\(.*\)<\/module>/\1/g")
+						nextModule=`realname $nextModule`
 						nextModules="${nextModules} ${nextModule}"
 						debug "nextModule = $nextModule"
 					fi
@@ -169,9 +166,9 @@ gitCloneUpstream ()
 				for nextModule in ${nextModules}; do gitCloneAll ${nextModule}; done
 			fi
 		done
-		debug "Done reading pom.xml."
+		debug "Done reading ${basedir}/${moduleName}/pom.xml."
 	else
-		debug "File ${moduleName}/pom.xml not found in current directory. Did the previous step fail to git clone?"
+		debug "File ${basedir}/${moduleName}/pom.xml not found. Did the previous step fail to git clone?"
 	fi
 }
 
@@ -179,23 +176,31 @@ gitCloneAll ()
 {
 	moduleName=$1
 	if [[ $moduleName ]]; then
-		#echo $doneModules
+		debug "Done modules: $doneModules"
 		if [[ ${doneModules/ ${moduleName}/} == $doneModules ]]; then
 			if [[ ${noUpstreamClone} == "1" ]]; then
-				debug "Fetching module ${moduleName} from branch ${branch} (no upstream modules will be fetched) ..."
+				debug "Fetching module ${moduleName} (no upstream modules will be fetched) ..."
 				gitClone ${moduleName}
 			else
-				debug "Fetching module ${moduleName} from branch ${branch} (and upstream modules) ..."
+				debug "Fetching module ${moduleName} (and upstream modules) ..."
 				gitClone ${moduleName}
 				# next step will only do something useful if the previous step completed; without it there's no ${moduleName}/pom.xml to parse
 				gitCloneUpstream ${moduleName}
 			fi
-		#else
-			#debug "Already processed ${moduleName}: skip."
+		else
+			debug "Already processed ${moduleName}: skip."
 		fi
 	fi
 }
 
-for moduleName in $moduleNames; do
+if [[ $moduleNames ]]; then
+    for moduleName in $moduleNames; do    
+	moduleName=`realname $moduleName`
 	gitCloneAll ${moduleName}
-done
+    done
+else
+    echo "No modules listed. Try use jbosstools-central."
+    echo
+    usage
+fi
+
