@@ -1,5 +1,6 @@
 #!/bin/bash
 
+unset CDPATH 
 ## Script to help checkout jbosstools repositories.
 ##
 ## How to get/use:
@@ -131,7 +132,7 @@ gitClone ()
 		git clone ${protocol}jbosstools/${module}.git ${basedir}/${module}
 
 		if [[ $username ]]; then
-		    debug Adding remote to fork for $username
+		    debug "Adding remote to fork for $username"
 		    cd ${basedir}/${module}
 		    git remote add $username git@github.com:${username}/${module}.git
 		fi
@@ -192,6 +193,8 @@ gitCloneAll ()
 		fi
 	fi
 }
+
+if [[ ${basedir} == "." ]]; then basedir=`pwd`; fi
 
 if [[ $moduleNames ]]; then
     for moduleName in $moduleNames; do    
