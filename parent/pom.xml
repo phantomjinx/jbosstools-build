@@ -413,22 +413,9 @@
 			<id>jbosstools-nightly-staging-composite-soa-tooling</id>
 			<properties>
 				<!-- TODO: This SOA profile should be based on usage of a SOA-specific TP made of unified + JBT -->
-				<jbosstools-site>${jbosstools-nightly}</jbosstools-site>
-				<jbosstools-tests-site>${jbosstools-nightly-tests}</jbosstools-tests-site>
+				<jbosstools-site>${jbosstools-nightly-staging-composite-soa-tooling}</jbosstools-site>
+				<jbosstools-tests-site>${jbosstools-nightly-staging-composite-soa-tooling}</jbosstools-tests-site>
 			</properties>
-			<repositories>
-				<repository>
-					<id>jbosstools-nightly-staging-composite-soa-tooling-</id>
-					<url>${jbosstools-nightly-staging-composite-soa-tooling}</url>
-					<layout>p2</layout>
-				</repository>
-				<!-- TODO JBIDE-11121: this repo should be in an SOA TP -->
-				<repository>
-					<id>jboss-requirements-composite-soa-tooling-mirror</id>
-					<url>${jboss-requirements-composite-soa-tooling-mirror}</url>
-					<layout>p2</layout>
-				</repository>
-			</repositories>
 		</profile>
 
 
@@ -510,6 +497,15 @@
 			</properties>
 		</profile>
 
+		<profile>
+			<id>soa</id>
+			<properties>
+				<tpc.group>soatools-JunoSR1a</tpc.group>
+				<tpc.targetKind>multiple</tpc.targetKind>
+				<!-- Workaround: why are TP version 4.1.0, and parent 4.0.0.CR1 ? -->
+				<TARGET_PLATFORM_VERSION>4.1.0.JunoSR1a-SNAPSHOT</TARGET_PLATFORM_VERSION>
+			</properties>
+		</profile>
 
 		<profile>
 			<!-- JBIDE-12455 , necessary because of XulRunner doesn't support 64bits OSX -->
