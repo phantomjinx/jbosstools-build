@@ -503,7 +503,7 @@
 				<tpc.group>soatools-JunoSR1a</tpc.group>
 				<tpc.targetKind>multiple</tpc.targetKind>
 				<!-- Workaround: why are TP version 4.1.0, and parent 4.0.0.CR1 ? -->
-				<TARGET_PLATFORM_VERSION>4.1.0.JunoSR1a-SNAPSHOT</TARGET_PLATFORM_VERSION>
+				<TARGET_PLATFORM_VERSION>4.2.1.a-SNAPSHOT</TARGET_PLATFORM_VERSION>
 			</properties>
 		</profile>
 
