@@ -29,18 +29,26 @@
 			<unit id="org.eclipse.bpel.feature.feature.group" version="1.0.2.v20121121-1634-CI"/>
 			<unit id="org.eclipse.bpel.help" version="1.0.2.v20121121-1634-CI"/>
 			<unit id="org.eclipse.bpel.apache.ode.runtime.feature.feature.group" version="1.0.2.v20121121-1634-CI"/>
-			<repository location="http://download.eclipse.org/bpel/site/"/>
+			<repository location="http://download.eclipse.org/bpel/site"/>
 		</location>
 		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 			<unit id="org.eclipse.ocl.all.feature.group" version="4.0.1.v20120917-1739"/>
-			<repository location="http://download.eclipse.org/modeling/mdt/ocl/updates/"/>
+			<repository location="http://download.eclipse.org/modeling/mdt/ocl/updates"/>
 		</location>
 		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 			<unit id="org.eclipse.emf.query.ocl.feature.group" version="1.6.0.v20120425-2310-3--7w311A232602735"/>
-			<repository location="http://download.eclipse.org/modeling/emf/updates/releases/"/>
+			<repository location="http://download.eclipse.org/modeling/emf/updates/releases"/>
 		</location>
 		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-			<repository location="http://download.jboss.org/jbosstools/updates/nightly/core/4.0.juno/"/>
+			<unit id="org.eclipse.emf.query.ocl.feature.group" version="1.6.0.v20120425-2310-3--7w311A232602735"/>
+			<repository location="http://download.eclipse.org/modeling/emf/updates/releases"/>
+		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<unit id="org.mockito" version="1.8.4.v201102171835"/>
+			<repository location="http://download.jboss.org/jbosstools/updates/requirements/orbit/R20120526062928"/>
+		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<repository location="http://download.jboss.org/jbosstools/updates/nightly/core/4.0.juno"/>
 			<!-- Required by Teiid Designer -->
 			<unit id="org.jboss.ide.eclipse.as.core" version="0.0.0"/>
 			<unit id="org.jboss.ide.eclipse.as.dmr" version="0.0.0"/>
