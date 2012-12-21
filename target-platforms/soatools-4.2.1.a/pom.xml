@@ -36,7 +36,7 @@
 							<sourceTargetFiles>
 								<item>soa-extensions.target</item>
 							</sourceTargetFiles>
-							<outputFile>${project.build.directory}/soa.target</outputFile>
+							<outputFile>${project.build.directory}/multiple.target</outputFile>
 						</configuration>
 					</execution>
 				</executions>
@@ -54,7 +54,7 @@
 						</goals>
 						<configuration>
 							<targetFiles>
-								<param>${project.build.directory}/soa.target</param>
+								<param>${project.build.directory}/multiple.target</param>
 							</targetFiles>
 							<failOnError>true</failOnError>
 						</configuration>
